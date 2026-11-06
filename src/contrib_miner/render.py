@@ -13,7 +13,7 @@ from PIL import Image
 from . import sprites as S
 from .fetch import Calendar
 from .layout import BOTTOM, GRASS_Y, GRID_Y, HEADER_Y, MARGIN_X, ROWS, SKY_DECORATION_MIN_X, SURFACE_Y
-from .seasons import Season
+from .seasons import Season, Sky
 from .stats import Stats, summarize
 
 INTRO_MS = 600
@@ -120,9 +120,15 @@ class Canvas:
                     if bit == "#":
                         self.set(x + i * S.GLYPH_ADVANCE + dx, y + dy, c)
 
-    def to_image(self, scale: int, theme: str = "dark", season: Season | None = None) -> Image.Image:
+    def to_image(
+        self, scale: int, theme: str = "dark", season: Season | None = None, sky: Sky | None = None
+    ) -> Image.Image:
         img = Image.frombytes("P", (self.w, self.h), bytes(self.px))
-        img.putpalette(S.palette_bytes(theme, season.palette_by_theme.get(theme) if season else None))
+        overrides = {
+            **(sky.palette_by_theme.get(theme, {}) if sky else {}),
+            **(season.palette_by_theme.get(theme, {}) if season else {}),
+        }
+        img.putpalette(S.palette_bytes(theme, overrides))
         if scale > 1:
             img = img.resize((self.w * scale, self.h * scale), Image.Resampling.NEAREST)
         return img
@@ -184,10 +190,11 @@ def _ore_tile(level: int) -> tuple[list[str], dict[str, str]]:
 class Scene:
     """Holds the mine as a persistent canvas that only changes cell by cell."""
 
-    def __init__(self, cal: Calendar, theme: str = "dark", season: Season | None = None):
+    def __init__(self, cal: Calendar, theme: str = "dark", season: Season | None = None, sky: Sky | None = None):
         self.cal = cal
         self.theme = theme
         self.season = season
+        self.sky = sky
         self.miner_key = {**S.MINER_KEY, **(season.hat_colours if season else {})}
         self.cols = len(cal.weeks)
         self.w = MARGIN_X * 2 + self.cols * S.TILE
@@ -225,8 +232,9 @@ class Scene:
         if self.theme == "light":
             for x, y in self.clouds:
                 c.blit(S.CLOUD, S.CLOUD_KEY, x, y)
-        if self.season:
-            self.season.decorate(c, self, random.Random(f"{self.cal.login}:{self.season.name}"))
+        dressing = self.season or self.sky
+        if dressing:
+            dressing.decorate(c, self, random.Random(f"{self.cal.login}:{dressing.name}"))
         for col in range(self.cols):
             for row in range(ROWS):
                 lvl = self.level(col, row)
@@ -335,6 +343,7 @@ def render_frames(
     max_seconds: float | None = DEFAULT_MAX_SECONDS,
     theme: str = "dark",
     season: Season | None = None,
+    sky: Sky | None = None,
 ) -> tuple[list[Canvas], list[int]]:
     steps = plan(cal)
     timing = choose_timing(
@@ -342,7 +351,7 @@ def render_frames(
         mines=sum(s.kind == "mine" for s in steps),
         max_seconds=max_seconds,
     )
-    scene = Scene(cal, theme, season)
+    scene = Scene(cal, theme, season, sky)
     frames: list[Canvas] = []
     durations: list[int] = []
     counted = 0
@@ -413,11 +422,12 @@ def render_gif(
     max_seconds: float | None = DEFAULT_MAX_SECONDS,
     theme: str = "dark",
     season: Season | None = None,
+    sky: Sky | None = None,
 ) -> Path:
     if theme not in S.THEMES:
         raise ValueError(f"unknown theme {theme!r}; choose from {', '.join(S.THEMES)}")
-    frames, durations = _merge_duplicates(*render_frames(cal, max_seconds, theme, season))
-    images = [f.to_image(scale, theme, season) for f in frames]
+    frames, durations = _merge_duplicates(*render_frames(cal, max_seconds, theme, season, sky))
+    images = [f.to_image(scale, theme, season, sky) for f in frames]
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     images[0].save(

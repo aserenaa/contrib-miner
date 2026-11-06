@@ -32,6 +32,7 @@ Sprites, tiles, the palette and the pixel font live in
 after GIF or PNG to the pull request, rendered with `--sample` so it shows no real account.
 The palette must stay under 256 colors, and the rendered sample should stay under about 250 KB.
 If the art changes, regenerate both demos in the same pull request:
-`contrib-miner --sample --output docs/sample.gif --light-output docs/sample-light.gif`.
+`contrib-miner --sample --sky autumn --output docs/sample.gif --light-output docs/sample-light.gif`.
+The demos pin the autumn sky so they don't change with the date they're rendered on.
 
 Security issues go through [SECURITY.md](SECURITY.md), not public issues.

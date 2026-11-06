@@ -1,5 +1,8 @@
 """Seasonal dressing: sky colours, surface decorations, sky animations and the miner's hat.
-The mine itself never changes."""
+The mine itself never changes.
+
+A Sky recolours the background for the time of year. A Season is a holiday on top of it, and its colours win.
+"""
 
 from __future__ import annotations
 
@@ -37,6 +40,18 @@ class Season:
         if self.first_day <= self.last_day:
             return self.first_day <= today <= self.last_day
         return today >= self.first_day or today <= self.last_day
+
+
+@dataclass(frozen=True)
+class Sky:
+    name: str
+    months: tuple[int, ...]
+    palette_by_theme: dict[str, dict[str, str]]
+    decorate: Decorate = field(repr=False)
+
+
+def _today() -> datetime.date:
+    return datetime.datetime.now(datetime.timezone.utc).date()
 
 
 def _surface_spots(scene: Scene, rng: random.Random, count: int, width: int) -> list[int]:
@@ -411,6 +426,168 @@ def _dia_de_muertos(c: Canvas, scene: Scene, rng: random.Random) -> None:
         c.blit(OFRENDA, {**OFRENDA_KEY, "e": eyes}, x, GRASS_Y - len(OFRENDA))
 
 
+SNOWY_PINE = [
+    "...w...",
+    "..wgw..",
+    "..ggg..",
+    ".wwgww.",
+    ".ggGgg.",
+    "wwgggww",
+    "gggGggg",
+    "...t...",
+    "...t...",
+]
+SNOWY_PINE_KEY = {"w": "spark", "g": "grass_dark", "G": "grass", "t": "dirt_light"}
+
+SNOWMAN = [
+    "..kkk..",
+    "..kkk..",
+    ".kkkkk.",
+    "..wcw..",
+    "..wwoo.",
+    "s.www.s",
+    ".swcws.",
+    "..www..",
+    ".wwcww.",
+    ".wwwww.",
+    "..www..",
+]
+SNOWMAN_KEY = {"k": "shirt", "w": "spark", "c": "coal", "o": "copper", "s": "dirt_light"}
+
+
+def _winter(c: Canvas, scene: Scene, rng: random.Random) -> None:
+    _snow_on_grass(c, scene, rng)
+    for i, x in enumerate(_surface_spots(scene, rng, 7, len(SNOWY_PINE[0]))):
+        sprite, key = (SNOWMAN, SNOWMAN_KEY) if i % 3 == 1 else (SNOWY_PINE, SNOWY_PINE_KEY)
+        c.blit(sprite, key, x, GRASS_Y - len(sprite))
+
+
+FLOWER = [
+    ".p.",
+    "pcp",
+    ".p.",
+    ".s.",
+]
+FLOWER_COLOURS = ("shirt", "gold", "purple_hi", "diamond", "spark")
+
+BLOSSOM_TREE = [
+    "..pPpp...",
+    ".pPpPpPp.",
+    "pPpwpPpPp",
+    "pPpPpPwpp",
+    ".pPpPpPp.",
+    "...pttp..",
+    "....t....",
+    "....t....",
+    "....t....",
+]
+BLOSSOM_TREE_KEY = {"p": "copper_hi", "P": "spark", "w": "purple_hi", "t": "dirt_light"}
+
+
+def _spring(c: Canvas, scene: Scene, rng: random.Random) -> None:
+    for i, x in enumerate(_surface_spots(scene, rng, 5, len(BLOSSOM_TREE[0]))):
+        if i % 2 == 0:
+            c.blit(BLOSSOM_TREE, BLOSSOM_TREE_KEY, x, GRASS_Y - len(BLOSSOM_TREE))
+    for x in _surface_spots(scene, rng, 18, len(FLOWER[0])):
+        key = {"p": rng.choice(FLOWER_COLOURS), "c": "gold_hi", "s": "grass_dark"}
+        c.blit(FLOWER, key, x, GRASS_Y - len(FLOWER) + 1)
+
+
+PALM = [
+    ".gg...gg.",
+    "gGgg.ggGg",
+    "g..gGg..g",
+    "...cGc...",
+    "....t....",
+    "....t....",
+    "...t.....",
+    "...t.....",
+    "...t.....",
+    "....t....",
+]
+PALM_KEY = {"g": "grass_dark", "G": "grass", "c": "dirt_dark", "t": "dirt_light"}
+
+UMBRELLA = [
+    "...r...",
+    ".rwrwr.",
+    "rwrwrwr",
+    "...p...",
+    "...p...",
+    "...p...",
+    "...p...",
+]
+UMBRELLA_KEY = {"r": "shirt", "w": "spark", "p": "stone_light"}
+
+VOLLEYBALL_NET = [
+    "..........wb...",
+    ".........wbww..",
+    ".........wwbw..",
+    "p.........bw..p",
+    "pwwwwwwwwwwwwwp",
+    "pw.w.w.w.w.w.wp",
+    "p.w.w.w.w.w.w.p",
+    "pwwwwwwwwwwwwwp",
+    "p.............p",
+    "p.............p",
+]
+VOLLEYBALL_NET_KEY = {"p": "stone_light", "w": "spark", "b": "diamond"}
+
+SUN = [
+    "..g.g..",
+    ".gGGGg.",
+    "gGGGGGg",
+    ".GGGGG.",
+    "gGGGGGg",
+    ".gGGGg.",
+    "..g.g..",
+]
+SUN_KEY = {"g": "gold", "G": "gold_hi"}
+
+
+def _summer(c: Canvas, scene: Scene, rng: random.Random) -> None:
+    c.rect(0, GRASS_Y, scene.w, 2, S.IDX["gold"])
+    c.rect(0, GRASS_Y + 2, scene.w, 1, S.IDX["dirt_light"])
+    for x in range(scene.w):
+        if rng.random() < 0.25:
+            c.set(x, GRASS_Y + rng.randrange(2), S.IDX["gold_hi"])
+    if scene.theme == "light":
+        c.blit(SUN, SUN_KEY, scene.w * 3 // 5, 7)
+    items = ((PALM, PALM_KEY), (VOLLEYBALL_NET, VOLLEYBALL_NET_KEY), (UMBRELLA, UMBRELLA_KEY))
+    for i, x in enumerate(_surface_spots(scene, rng, 6, len(VOLLEYBALL_NET[0]))):
+        sprite, key = items[i % len(items)]
+        c.blit(sprite, key, x, GRASS_Y - len(sprite))
+
+
+AUTUMN_TREE = [
+    "...oOo...",
+    ".ooOroOo.",
+    "oOrooOroo",
+    "ooOoOooOo",
+    ".oorOoOo.",
+    "..ooOoo..",
+    "....t....",
+    "....t....",
+    "....t....",
+]
+AUTUMN_TREE_KEY = {"o": "copper", "O": "gold", "r": "shirt", "t": "dirt_light"}
+LEAF_COLOURS = ("copper", "gold", "shirt")
+
+
+def _autumn(c: Canvas, scene: Scene, rng: random.Random) -> None:
+    tree_w, tree_h = len(AUTUMN_TREE[0]), len(AUTUMN_TREE)
+    for x in _surface_spots(scene, rng, 6, tree_w):
+        c.blit(AUTUMN_TREE, AUTUMN_TREE_KEY, x, GRASS_Y - tree_h)
+        for _ in range(5):
+            c.set(
+                x + rng.randrange(-4, tree_w + 6),
+                rng.randrange(GRASS_Y - tree_h + 4, GRASS_Y),
+                S.IDX[rng.choice(LEAF_COLOURS)],
+            )
+    for x in range(scene.w):
+        if rng.random() < 0.3:
+            c.set(x, GRASS_Y, S.IDX[rng.choice(LEAF_COLOURS)])
+
+
 SEASONS: dict[str, Season] = {
     # Mexican Independence Day: the Grito on the night of September 15, the holiday on the 16th.
     "independence": Season(
@@ -512,6 +689,61 @@ SEASONS: dict[str, Season] = {
     ),
 }
 
+# Meteorological seasons, northern hemisphere. In the light theme "star" and "star_hi" colour the clouds.
+SKIES: dict[str, Sky] = {
+    "winter": Sky(
+        name="winter",
+        months=(12, 1, 2),
+        palette_by_theme={
+            "dark": {"bg": "#121a30", "star": "#6d8bb0", "star_hi": "#e0f0ff"},
+            "light": {"bg": "#d3e2ee", "star": "#ffffff", "star_hi": "#eef5fa"},
+        },
+        decorate=_winter,
+    ),
+    "spring": Sky(
+        name="spring",
+        months=(3, 4, 5),
+        palette_by_theme={
+            "dark": {"bg": "#14262e", "star": "#5a8a7a", "star_hi": "#c8f0d8"},
+            "light": {"bg": "#b4e6ec", "star": "#ffffff", "star_hi": "#e4f6f8"},
+        },
+        decorate=_spring,
+    ),
+    "summer": Sky(
+        name="summer",
+        months=(6, 7, 8),
+        palette_by_theme={
+            "dark": {"bg": "#1c1838", "star": "#6c5ca8", "star_hi": "#ffe9a8"},
+            "light": {"bg": "#7ccaf5", "star": "#ffffff", "star_hi": "#d4eefc"},
+        },
+        decorate=_summer,
+    ),
+    "autumn": Sky(
+        name="autumn",
+        months=(9, 10, 11),
+        palette_by_theme={
+            "dark": {"bg": "#26181c", "star": "#8a6656", "star_hi": "#ffcd9a"},
+            "light": {"bg": "#f0d4ae", "star": "#fff7ea", "star_hi": "#fbe8cf"},
+        },
+        decorate=_autumn,
+    ),
+}
+
+SKY_CHOICES = ["none", "auto", *SKIES]
+
+
+def resolve_sky(choice: str | None, today: datetime.date | None = None) -> Sky | None:
+    """Turn a --sky choice into a Sky. "auto" picks the season of the year today falls in."""
+    if choice in (None, "", "none"):
+        return None
+    if choice == "auto":
+        month = (today or _today()).month
+        return next(s for s in SKIES.values() if month in s.months)
+    if choice not in SKIES:
+        raise ValueError(f"unknown sky {choice!r}; choose from {', '.join(SKY_CHOICES)}")
+    return SKIES[choice]
+
+
 SEASON_CHOICES = ["none", "auto", *SEASONS]
 
 
@@ -520,7 +752,7 @@ def resolve(choice: str | None, today: datetime.date | None = None) -> Season | 
     if choice in (None, "", "none"):
         return None
     if choice == "auto":
-        today = today or datetime.datetime.now(datetime.timezone.utc).date()
+        today = today or _today()
         return next((s for s in SEASONS.values() if s.active_on(today)), None)
     if choice not in SEASONS:
         raise ValueError(f"unknown season {choice!r}; choose from {', '.join(SEASON_CHOICES)}")
