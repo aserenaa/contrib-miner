@@ -20,7 +20,7 @@ walks to every day you contributed and mines it out. The busier the day, the ric
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: light)" srcset="docs/sample-light.gif">
-    <img src="docs/sample.gif" alt="An 8-bit miner climbing down into a contribution graph under an autumn sky with orange trees and falling leaves, walking through tunnels and striking coal, copper, gold and diamond ore from the side while a contribution counter climbs" width="864">
+    <img src="docs/sample.gif" alt="An 8-bit miner climbing down into a contribution graph under a winter sky with snowy pines and a snowman, walking through tunnels and striking coal, copper, gold and diamond ore from the side while a contribution counter climbs" width="864">
   </picture>
 </p>
 
@@ -92,16 +92,6 @@ jobs:
 ```
 
 Only want one theme? Drop `light_output` and the `<source>` line.
-
-### Seasons
-
-The sky and the surface change with the time of year. `auto` picks the season from the date of the run,
-using northern-hemisphere months: winter is December to February, spring March to May, summer June to
-August and autumn September to November. Pin one with `sky: summer`, or turn it off with `sky: none`.
-
-<p align="center">
-  <img src="docs/seasons.png" alt="The miner's surface in each season: snowy pines and a snowman in winter, blossom trees and flowers in spring, a beach with palms, umbrellas and a volleyball net in summer, and orange trees with falling leaves in autumn, each in the dark and light theme" width="864">
-</p>
 
 ### Inputs
 
