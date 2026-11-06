@@ -293,5 +293,66 @@ class SeasonTests(unittest.TestCase):
                 self.assertEqual(bg, tuple(bytes.fromhex(season.palette_by_theme["dark"]["bg"][1:])))
 
 
+class SkyTests(unittest.TestCase):
+    def test_auto_picks_the_season_of_the_year(self):
+        cases = {
+            datetime.date(2026, 12, 1): "winter",
+            datetime.date(2027, 2, 28): "winter",
+            datetime.date(2027, 3, 1): "spring",
+            datetime.date(2027, 5, 31): "spring",
+            datetime.date(2027, 6, 1): "summer",
+            datetime.date(2027, 8, 31): "summer",
+            datetime.date(2027, 9, 1): "autumn",
+            datetime.date(2027, 11, 30): "autumn",
+        }
+        for day, expected in cases.items():
+            self.assertEqual(Z.resolve_sky("auto", today=day).name, expected, day)
+
+    def test_explicit_and_unknown_choices(self):
+        self.assertIsNone(Z.resolve_sky("none"))
+        self.assertEqual(Z.resolve_sky("summer").name, "summer")
+        with self.assertRaises(ValueError):
+            Z.resolve_sky("monsoon")
+
+    def test_skies_cover_every_month_and_theme_with_known_colours(self):
+        names = {name for name, _ in S.PALETTE}
+        months = sorted(m for sky in Z.SKIES.values() for m in sky.months)
+        self.assertEqual(months, list(range(1, 13)))
+        for sky in Z.SKIES.values():
+            self.assertEqual(set(sky.palette_by_theme), set(S.THEMES), sky.name)
+            for overrides in sky.palette_by_theme.values():
+                self.assertLessEqual(set(overrides), names, sky.name)
+
+    def test_skies_only_dress_the_surface(self):
+        cal = sample_calendar("tester")
+        plain = Scene(cal).base
+        below = GRID_Y * plain.w
+        for sky in Z.SKIES.values():
+            for theme in S.THEMES:
+                dressed = Scene(cal, theme, sky=sky).base
+                self.assertNotEqual(dressed.px[:below], plain.px[:below], f"{sky.name}/{theme} added no scenery")
+                self.assertEqual(dressed.px[below:], plain.px[below:], f"{sky.name}/{theme} changed the mine")
+
+    def test_holiday_scenery_replaces_the_sky_scenery(self):
+        cal = sample_calendar("tester")
+        christmas = Z.SEASONS["christmas"]
+        self.assertEqual(
+            Scene(cal, season=christmas, sky=Z.SKIES["winter"]).base.px, Scene(cal, season=christmas).base.px
+        )
+
+    def test_sky_recolours_the_background_and_holidays_win(self):
+        cal = sample_calendar("tester")
+        winter = Z.SKIES["winter"]
+        with tempfile.TemporaryDirectory() as tmp:
+            for theme in S.THEMES:
+                out = render_gif(cal, Path(tmp) / f"{theme}.gif", scale=1, theme=theme, sky=winter)
+                bg = Image.open(out).convert("RGB").getpixel((0, 0))
+                self.assertEqual(bg, tuple(bytes.fromhex(winter.palette_by_theme[theme]["bg"][1:])), theme)
+            christmas = Z.SEASONS["christmas"]
+            out = render_gif(cal, Path(tmp) / "xmas.gif", scale=1, season=christmas, sky=winter)
+            bg = Image.open(out).convert("RGB").getpixel((0, 0))
+        self.assertEqual(bg, tuple(bytes.fromhex(christmas.palette_by_theme["dark"]["bg"][1:])))
+
+
 if __name__ == "__main__":
     unittest.main()

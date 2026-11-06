@@ -8,6 +8,7 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- The sky and surface follow the season: snowy pines and a snowman in winter, blossoms in spring, a beach in summer and falling leaves in autumn.
 - Another small surprise in September.
 - Another small surprise, in June.
 - Another small surprise, just after the first one.

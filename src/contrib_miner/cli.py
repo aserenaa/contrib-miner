@@ -10,7 +10,7 @@ import sys
 
 from .fetch import fetch_calendar, parse_calendar, sample_calendar
 from .render import DEFAULT_MAX_SECONDS, render_gif
-from .seasons import SEASON_CHOICES, resolve
+from .seasons import SEASON_CHOICES, SKY_CHOICES, resolve, resolve_sky
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -24,6 +24,12 @@ def main(argv: list[str] | None = None) -> int:
         choices=SEASON_CHOICES,
         default="auto",
         help=argparse.SUPPRESS,
+    )
+    p.add_argument(
+        "--sky",
+        choices=SKY_CHOICES,
+        default="auto",
+        help="seasonal sky and scenery; auto follows today's date in the northern hemisphere (default auto)",
     )
     p.add_argument("--light-output", metavar="PATH", help="also write a light-theme GIF here, from the same data")
     p.add_argument("--scale", type=int, default=2, help="integer upscale factor (default 2)")
@@ -65,13 +71,16 @@ def main(argv: list[str] | None = None) -> int:
         cal = fetch_calendar(args.user, args.token, year=args.year)
 
     season = resolve(args.season)
+    sky = resolve_sky(args.sky)
     jobs = [(args.output, args.theme)]
     if args.light_output:
         jobs.append((args.light_output, "light"))
     for path, theme in jobs:
-        out = render_gif(cal, path, scale=args.scale, max_seconds=args.max_seconds or None, theme=theme, season=season)
+        out = render_gif(
+            cal, path, scale=args.scale, max_seconds=args.max_seconds or None, theme=theme, season=season, sky=sky
+        )
         size_kb = out.stat().st_size / 1024
-        look = f"{theme}, {season.name}" if season else theme
+        look = ", ".join([theme] + [x.name for x in (sky, season) if x])
         print(
             f"wrote {out} ({look}, {size_kb:.0f} KB, {len(cal.weeks)} weeks, {cal.total} contributions)",
             file=sys.stderr,
