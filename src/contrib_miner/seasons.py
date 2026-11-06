@@ -138,11 +138,45 @@ def _canada_day(c: Canvas, scene: Scene, rng: random.Random) -> None:
         c.blit(FLAG, FLAG_KEY, x, GRASS_Y - len(FLAG))
 
 
+PAPEL_PICADO = [
+    "fffff",
+    "f.f.f",
+    "ff.ff",
+    ".f.f.",
+]
+PAPEL_PICADO_COLOURS = ["purple_hi", "copper", "grass_hi", "diamond", "gold", "shirt"]
+PAPEL_PICADO_Y = 9
+
+OFRENDA = [
+    "....f..sss..f....",
+    ".O..w.seses.w..O.",
+    "OoO.w.ssnss.w.OoO",
+    ".g..w..s.s..w..g.",
+]
+OFRENDA_KEY = {"f": "gold", "w": "spark", "s": "spark", "n": "coal", "O": "copper", "o": "gold", "g": "grass_dark"}
+SKULL_EYE_COLOURS = ["diamond", "shirt", "purple_hi", "grass"]
+
+
+def _dia_de_muertos(c: Canvas, scene: Scene, rng: random.Random) -> None:
+    flag_w = len(PAPEL_PICADO[0])
+    left, right = SKY_DECORATION_MIN_X, scene.w - 4
+    c.rect(left, PAPEL_PICADO_Y, right - left, 1, S.IDX["text_dim"])
+    for i, x in enumerate(range(left + 1, right - flag_w, flag_w + 2)):
+        colour = PAPEL_PICADO_COLOURS[i % len(PAPEL_PICADO_COLOURS)]
+        c.blit(PAPEL_PICADO, {"f": colour}, x, PAPEL_PICADO_Y + 1)
+    for x in range(scene.w):
+        if rng.random() < 0.3:
+            c.set(x, GRASS_Y, S.IDX[rng.choice(("copper", "gold"))])
+    for x in _surface_spots(scene, rng, 5, len(OFRENDA[0])):
+        eyes = rng.choice(SKULL_EYE_COLOURS)
+        c.blit(OFRENDA, {**OFRENDA_KEY, "e": eyes}, x, GRASS_Y - len(OFRENDA))
+
+
 SEASONS: dict[str, Season] = {
     "halloween": Season(
         name="halloween",
         first_day=(10, 15),
-        last_day=(11, 1),
+        last_day=(10, 31),
         palette_by_theme={
             "dark": {"bg": "#1f1030", "star": "#5d275d", "star_hi": "#8e478c", "accent": "#ef7d57"},
             "light": {"bg": "#f4a261", "star": "#ffd6a5", "star_hi": "#f8c08a", "accent": "#5d275d"},
@@ -150,6 +184,30 @@ SEASONS: dict[str, Season] = {
         hat_colours={"y": "purple", "w": "gold_hi"},
         card_border="copper",
         decorate=_halloween,
+    ),
+    "dia-de-muertos": Season(
+        name="dia-de-muertos",
+        first_day=(11, 1),
+        last_day=(11, 2),
+        palette_by_theme={
+            "dark": {
+                "bg": "#24122e",
+                "star": "#6b3a6b",
+                "star_hi": "#ffcd75",
+                "accent": "#ff9f1c",
+                "purple_hi": "#e4007c",
+            },
+            "light": {
+                "bg": "#f3c4dc",
+                "star": "#ffffff",
+                "star_hi": "#fbe3ef",
+                "accent": "#5d275d",
+                "purple_hi": "#e4007c",
+            },
+        },
+        hat_colours={"y": "purple_hi", "w": "gold"},
+        card_border="purple_hi",
+        decorate=_dia_de_muertos,
     ),
     "christmas": Season(
         name="christmas",
