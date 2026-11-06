@@ -8,6 +8,7 @@ from PIL import Image, ImageSequence
 from contrib_miner import seasons as Z
 from contrib_miner import sprites as S
 from contrib_miner.fetch import Day, build_query, parse_calendar, sample_calendar, year_range
+from contrib_miner.layout import GRASS_Y
 from contrib_miner.render import (
     FASTEST,
     GRID_Y,
@@ -248,7 +249,11 @@ class SeasonTests(unittest.TestCase):
             datetime.date(2026, 11, 3): None,
             datetime.date(2026, 12, 1): "christmas",
             datetime.date(2026, 12, 26): "christmas",
-            datetime.date(2026, 12, 27): None,
+            datetime.date(2026, 12, 27): "new-year",
+            datetime.date(2026, 12, 31): "new-year",
+            datetime.date(2027, 1, 1): "new-year",
+            datetime.date(2027, 1, 2): "new-year",
+            datetime.date(2027, 1, 3): None,
             datetime.date(2027, 6, 1): None,
             datetime.date(2027, 6, 16): None,
             datetime.date(2027, 6, 17): "quebec",
@@ -261,6 +266,10 @@ class SeasonTests(unittest.TestCase):
         for day, expected in cases.items():
             season = Z.resolve("auto", today=day)
             self.assertEqual(season.name if season else None, expected, day)
+
+    def test_new_year_banner_welcomes_the_coming_year(self):
+        self.assertEqual(Z._coming_year(datetime.date(2026, 12, 27)), 2027)
+        self.assertEqual(Z._coming_year(datetime.date(2027, 1, 2)), 2027)
 
     def test_explicit_and_unknown_choices(self):
         self.assertIsNone(Z.resolve("none"))
@@ -284,6 +293,15 @@ class SeasonTests(unittest.TestCase):
             for theme in S.THEMES:
                 dressed = Scene(cal, theme, season).base
                 self.assertEqual(dressed.px[below:], plain.px[below:], f"{season.name}/{theme} changed the mine")
+
+    def test_new_year_fireworks_animate_in_the_sky_only(self):
+        cal = sample_calendar("tester")
+        scene = Scene(cal, season=Z.SEASONS["new-year"])
+        miner = (0, 0, S.MINER_UP)
+        frames = [scene.frame(tick, 0, miner).px for tick in range(40)]
+        below = GRASS_Y * scene.w
+        self.assertGreater(len({bytes(f[:below]) for f in frames}), 1)
+        self.assertEqual({bytes(f[below:]) for f in frames}, {bytes(frames[0][below:])})
 
     def test_seasonal_gif_decodes(self):
         with tempfile.TemporaryDirectory() as tmp:
