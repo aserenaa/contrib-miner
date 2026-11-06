@@ -236,6 +236,10 @@ class ThemeTests(unittest.TestCase):
 class SeasonTests(unittest.TestCase):
     def test_auto_picks_by_date(self):
         cases = {
+            datetime.date(2026, 8, 31): None,
+            datetime.date(2026, 9, 1): "independence",
+            datetime.date(2026, 9, 16): "independence",
+            datetime.date(2026, 9, 17): None,
             datetime.date(2026, 10, 14): None,
             datetime.date(2026, 10, 15): "halloween",
             datetime.date(2026, 10, 31): "halloween",
