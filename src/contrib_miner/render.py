@@ -256,6 +256,8 @@ class Scene:
             for i, (x, y, bright) in enumerate(self.stars):
                 if bright or (i + twinkle) % 5 != 0:
                     c.set(x, y, S.IDX["star_hi" if bright and twinkle % 2 else "star"])
+        if self.season and self.season.animate:
+            self.season.animate(c, self, tick)
         title = f"{self.cal.login} {self.cal.year}" if self.cal.year else self.cal.login
         c.text(title, MARGIN_X, HEADER_Y, "text")
         right = f"{counted} CONTRIBUTIONS"

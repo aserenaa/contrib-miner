@@ -8,6 +8,7 @@ from PIL import Image, ImageSequence
 from contrib_miner import seasons as Z
 from contrib_miner import sprites as S
 from contrib_miner.fetch import Day, build_query, parse_calendar, sample_calendar, year_range
+from contrib_miner.layout import GRASS_Y
 from contrib_miner.render import (
     FASTEST,
     GRID_Y,
@@ -279,6 +280,15 @@ class SeasonTests(unittest.TestCase):
             for theme in S.THEMES:
                 dressed = Scene(cal, theme, season).base
                 self.assertEqual(dressed.px[below:], plain.px[below:], f"{season.name}/{theme} changed the mine")
+
+    def test_new_year_fireworks_animate_in_the_sky_only(self):
+        cal = sample_calendar("tester")
+        scene = Scene(cal, season=Z.SEASONS["new-year"])
+        miner = (0, 0, S.MINER_UP)
+        frames = [scene.frame(tick, 0, miner).px for tick in range(40)]
+        below = GRASS_Y * scene.w
+        self.assertGreater(len({bytes(f[:below]) for f in frames}), 1)
+        self.assertEqual({bytes(f[below:]) for f in frames}, {bytes(frames[0][below:])})
 
     def test_seasonal_gif_decodes(self):
         with tempfile.TemporaryDirectory() as tmp:
