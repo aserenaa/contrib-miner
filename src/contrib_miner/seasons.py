@@ -4,6 +4,7 @@ The mine itself never changes."""
 from __future__ import annotations
 
 import datetime
+import itertools
 import random
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -254,11 +255,192 @@ def _new_year_fireworks(c: Canvas, scene: Scene, tick: int) -> None:
         _draw_firework(c, fw, (tick // FIREWORK_STAGE_TICKS + fw.offset) % fw.period)
 
 
+MEXICAN_FLAG = [
+    "k......",
+    "|ggwwrr",
+    "|ggeerr",
+    "|ggwwrr",
+    "|......",
+    "|......",
+    "|......",
+    "|......",
+    "|......",
+]
+MEXICAN_FLAG_KEY = {"k": "gold", "|": "stone_light", "g": "grass", "w": "spark", "r": "shirt", "e": "copper"}
+
+PENNANT = [
+    "ccc",
+    "c.c",
+    ".c.",
+]
+PENNANT_COLOURS = ("grass", "spark", "shirt")
+PENNANT_SPACING = 4
+GARLAND_SAG = 3
+
+
+def _garland(c: Canvas, x0: int, x1: int, y: int, first_colour: int) -> int:
+    """A sagging string of papel picado between two poles. Returns the next pennant colour."""
+    span = x1 - x0
+    colour = first_colour
+    for x in range(x0, x1 + 1):
+        t = (x - x0) / span
+        sag = round(GARLAND_SAG * 4 * t * (1 - t))
+        c.set(x, y + sag, S.IDX["stone_light"])
+        if x - x0 >= 2 and x1 - x >= 4 and (x - x0) % PENNANT_SPACING == 2:
+            c.blit(PENNANT, {"c": PENNANT_COLOURS[colour % len(PENNANT_COLOURS)]}, x, y + sag + 1)
+            colour += 1
+    return colour
+
+
+def _independence(c: Canvas, scene: Scene, rng: random.Random) -> None:
+    flag_top = GRASS_Y - len(MEXICAN_FLAG)
+    poles = _surface_spots(scene, rng, 7, len(MEXICAN_FLAG[0]))
+    colour = 0
+    for left, right in itertools.pairwise(poles):
+        colour = _garland(c, left + len(MEXICAN_FLAG[0]), right, flag_top + 1, colour)
+    for x in poles:
+        c.blit(MEXICAN_FLAG, MEXICAN_FLAG_KEY, x, flag_top)
+
+
+FLAG = [
+    "prrrwwwrwwwrrr",
+    "prrrwrwrwrwrrr",
+    "prrrwrrrrrwrrr",
+    "prrrwwrrrwwrrr",
+    "prrrwwwrwwwrrr",
+    "p.............",
+    "p.............",
+    "p.............",
+    "p.............",
+]
+FLAG_KEY = {"p": "stone_light", "r": "shirt", "w": "spark"}
+
+FIREWORK = [
+    "...x...",
+    ".x...x.",
+    "...h...",
+    "x.hHh.x",
+    "...h...",
+    ".x...x.",
+    "...x...",
+]
+
+
+def _canada_day(c: Canvas, scene: Scene, rng: random.Random) -> None:
+    mx = scene.w * 3 // 5
+    second = "spark" if scene.theme == "dark" else "gold"
+    for dx, dy, colour in ((-34, 2, "shirt"), (0, 6, second), (30, 1, "shirt"), (58, 7, second)):
+        c.blit(FIREWORK, {"x": colour, "h": colour, "H": "gold_hi"}, mx + dx, dy)
+    for x in _surface_spots(scene, rng, 6, len(FLAG[0])):
+        c.blit(FLAG, FLAG_KEY, x, GRASS_Y - len(FLAG))
+
+
+QUEBEC_FLAG = [
+    "k.......",
+    "pbwbwbwb",
+    "pbbbwbbb",
+    "pwwwwwww",
+    "pbbbwbbb",
+    "pbwbwbwb",
+    "p.......",
+    "p.......",
+    "p.......",
+]
+QUEBEC_FLAG_KEY = {"k": "gold", "p": "stone_light", "b": "pants", "w": "spark"}
+
+BONFIRE = [
+    "...f...",
+    "..fgf..",
+    ".fgygf.",
+    ".fgyyf.",
+    "ldfgfdl",
+    "dl...ld",
+]
+BONFIRE_KEY = {"f": "copper", "g": "gold", "y": "gold_hi", "l": "dirt_light", "d": "dirt_dark"}
+
+QUEBEC_FIREWORK = [
+    "x.x.x",
+    ".xxx.",
+    "xxoxx",
+    ".xxx.",
+    "x.x.x",
+]
+
+
+def _quebec(c: Canvas, scene: Scene, rng: random.Random) -> None:
+    burst = {"x": "spark" if scene.theme == "dark" else "pants", "o": "diamond"}
+    mx = scene.w // 2
+    for dx, dy in ((-40, 2), (-6, 5), (30, 1)):
+        c.blit(QUEBEC_FIREWORK, burst, mx + dx, dy)
+    for i, x in enumerate(_surface_spots(scene, rng, 7, len(QUEBEC_FLAG[0]))):
+        sprite, key = (QUEBEC_FLAG, QUEBEC_FLAG_KEY) if i % 2 == 0 else (BONFIRE, BONFIRE_KEY)
+        c.blit(sprite, key, x, GRASS_Y - len(sprite))
+
+
+PAPEL_PICADO = [
+    "fffff",
+    "f.f.f",
+    "ff.ff",
+    ".f.f.",
+]
+PAPEL_PICADO_COLOURS = ["purple_hi", "copper", "grass_hi", "diamond", "gold", "shirt"]
+PAPEL_PICADO_Y = 9
+
+OFRENDA = [
+    "....f..sss..f....",
+    ".O..w.seses.w..O.",
+    "OoO.w.ssnss.w.OoO",
+    ".g..w..s.s..w..g.",
+]
+OFRENDA_KEY = {"f": "gold", "w": "spark", "s": "spark", "n": "coal", "O": "copper", "o": "gold", "g": "grass_dark"}
+SKULL_EYE_COLOURS = ["diamond", "shirt", "purple_hi", "grass"]
+
+
+def _dia_de_muertos(c: Canvas, scene: Scene, rng: random.Random) -> None:
+    flag_w = len(PAPEL_PICADO[0])
+    left, right = SKY_DECORATION_MIN_X, scene.w - 4
+    c.rect(left, PAPEL_PICADO_Y, right - left, 1, S.IDX["text_dim"])
+    for i, x in enumerate(range(left + 1, right - flag_w, flag_w + 2)):
+        colour = PAPEL_PICADO_COLOURS[i % len(PAPEL_PICADO_COLOURS)]
+        c.blit(PAPEL_PICADO, {"f": colour}, x, PAPEL_PICADO_Y + 1)
+    for x in range(scene.w):
+        if rng.random() < 0.3:
+            c.set(x, GRASS_Y, S.IDX[rng.choice(("copper", "gold"))])
+    for x in _surface_spots(scene, rng, 5, len(OFRENDA[0])):
+        eyes = rng.choice(SKULL_EYE_COLOURS)
+        c.blit(OFRENDA, {**OFRENDA_KEY, "e": eyes}, x, GRASS_Y - len(OFRENDA))
+
+
 SEASONS: dict[str, Season] = {
+    # Mexican Independence Day: the Grito on the night of September 15, the holiday on the 16th.
+    "independence": Season(
+        name="independence",
+        first_day=(9, 1),
+        last_day=(9, 16),
+        palette_by_theme={
+            "dark": {"bg": "#101b33", "accent": "#38b764"},
+            "light": {"bg": "#fde4c4", "star": "#ffffff", "star_hi": "#fff3e3"},
+        },
+        hat_colours={"y": "grass", "w": "spark"},
+        card_border="grass",
+        decorate=_independence,
+    ),
+    "quebec": Season(
+        name="quebec",
+        first_day=(6, 17),
+        last_day=(6, 24),
+        palette_by_theme={
+            "dark": {"bg": "#0b1a3a", "star": "#3b5dc9", "star_hi": "#ffffff", "accent": "#ffffff"},
+            "light": {"bg": "#cfe3ff", "star": "#ffffff", "star_hi": "#eaf2ff", "accent": "#003da5"},
+        },
+        hat_colours={"y": "pants", "w": "spark"},
+        card_border="pants",
+        decorate=_quebec,
+    ),
     "halloween": Season(
         name="halloween",
         first_day=(10, 15),
-        last_day=(11, 1),
+        last_day=(10, 31),
         palette_by_theme={
             "dark": {"bg": "#1f1030", "star": "#5d275d", "star_hi": "#8e478c", "accent": "#ef7d57"},
             "light": {"bg": "#f4a261", "star": "#ffd6a5", "star_hi": "#f8c08a", "accent": "#5d275d"},
@@ -266,6 +448,30 @@ SEASONS: dict[str, Season] = {
         hat_colours={"y": "purple", "w": "gold_hi"},
         card_border="copper",
         decorate=_halloween,
+    ),
+    "dia-de-muertos": Season(
+        name="dia-de-muertos",
+        first_day=(11, 1),
+        last_day=(11, 2),
+        palette_by_theme={
+            "dark": {
+                "bg": "#24122e",
+                "star": "#6b3a6b",
+                "star_hi": "#ffcd75",
+                "accent": "#ff9f1c",
+                "purple_hi": "#e4007c",
+            },
+            "light": {
+                "bg": "#f3c4dc",
+                "star": "#ffffff",
+                "star_hi": "#fbe3ef",
+                "accent": "#5d275d",
+                "purple_hi": "#e4007c",
+            },
+        },
+        hat_colours={"y": "purple_hi", "w": "gold"},
+        card_border="purple_hi",
+        decorate=_dia_de_muertos,
     ),
     "christmas": Season(
         name="christmas",
@@ -291,6 +497,18 @@ SEASONS: dict[str, Season] = {
         card_border="diamond",
         decorate=_new_year,
         animate=_new_year_fireworks,
+    ),
+    "canada-day": Season(
+        name="canada-day",
+        first_day=(6, 25),
+        last_day=(7, 2),
+        palette_by_theme={
+            "dark": {"bg": "#0e1630", "star": "#3b4a6b", "star_hi": "#94b0c2", "accent": "#ef5b5b"},
+            "light": {"bg": "#bfe6fb", "star": "#ffffff", "star_hi": "#e3f4fd", "accent": "#b13e53"},
+        },
+        hat_colours={"y": "shirt", "w": "spark"},
+        card_border="shirt",
+        decorate=_canada_day,
     ),
 }
 

@@ -237,10 +237,16 @@ class ThemeTests(unittest.TestCase):
 class SeasonTests(unittest.TestCase):
     def test_auto_picks_by_date(self):
         cases = {
+            datetime.date(2026, 8, 31): None,
+            datetime.date(2026, 9, 1): "independence",
+            datetime.date(2026, 9, 16): "independence",
+            datetime.date(2026, 9, 17): None,
             datetime.date(2026, 10, 14): None,
             datetime.date(2026, 10, 15): "halloween",
-            datetime.date(2026, 11, 1): "halloween",
-            datetime.date(2026, 11, 2): None,
+            datetime.date(2026, 10, 31): "halloween",
+            datetime.date(2026, 11, 1): "dia-de-muertos",
+            datetime.date(2026, 11, 2): "dia-de-muertos",
+            datetime.date(2026, 11, 3): None,
             datetime.date(2026, 12, 1): "christmas",
             datetime.date(2026, 12, 26): "christmas",
             datetime.date(2026, 12, 27): "new-year",
@@ -249,6 +255,13 @@ class SeasonTests(unittest.TestCase):
             datetime.date(2027, 1, 2): "new-year",
             datetime.date(2027, 1, 3): None,
             datetime.date(2027, 6, 1): None,
+            datetime.date(2027, 6, 16): None,
+            datetime.date(2027, 6, 17): "quebec",
+            datetime.date(2027, 6, 24): "quebec",
+            datetime.date(2027, 6, 25): "canada-day",
+            datetime.date(2027, 7, 1): "canada-day",
+            datetime.date(2027, 7, 2): "canada-day",
+            datetime.date(2027, 7, 3): None,
         }
         for day, expected in cases.items():
             season = Z.resolve("auto", today=day)
