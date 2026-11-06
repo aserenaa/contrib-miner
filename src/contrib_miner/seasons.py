@@ -138,6 +138,48 @@ def _canada_day(c: Canvas, scene: Scene, rng: random.Random) -> None:
         c.blit(FLAG, FLAG_KEY, x, GRASS_Y - len(FLAG))
 
 
+QUEBEC_FLAG = [
+    "k.......",
+    "pbwbwbwb",
+    "pbbbwbbb",
+    "pwwwwwww",
+    "pbbbwbbb",
+    "pbwbwbwb",
+    "p.......",
+    "p.......",
+    "p.......",
+]
+QUEBEC_FLAG_KEY = {"k": "gold", "p": "stone_light", "b": "pants", "w": "spark"}
+
+BONFIRE = [
+    "...f...",
+    "..fgf..",
+    ".fgygf.",
+    ".fgyyf.",
+    "ldfgfdl",
+    "dl...ld",
+]
+BONFIRE_KEY = {"f": "copper", "g": "gold", "y": "gold_hi", "l": "dirt_light", "d": "dirt_dark"}
+
+QUEBEC_FIREWORK = [
+    "x.x.x",
+    ".xxx.",
+    "xxoxx",
+    ".xxx.",
+    "x.x.x",
+]
+
+
+def _quebec(c: Canvas, scene: Scene, rng: random.Random) -> None:
+    burst = {"x": "spark" if scene.theme == "dark" else "pants", "o": "diamond"}
+    mx = scene.w // 2
+    for dx, dy in ((-40, 2), (-6, 5), (30, 1)):
+        c.blit(QUEBEC_FIREWORK, burst, mx + dx, dy)
+    for i, x in enumerate(_surface_spots(scene, rng, 7, len(QUEBEC_FLAG[0]))):
+        sprite, key = (QUEBEC_FLAG, QUEBEC_FLAG_KEY) if i % 2 == 0 else (BONFIRE, BONFIRE_KEY)
+        c.blit(sprite, key, x, GRASS_Y - len(sprite))
+
+
 PAPEL_PICADO = [
     "fffff",
     "f.f.f",
@@ -173,6 +215,18 @@ def _dia_de_muertos(c: Canvas, scene: Scene, rng: random.Random) -> None:
 
 
 SEASONS: dict[str, Season] = {
+    "quebec": Season(
+        name="quebec",
+        first_day=(6, 17),
+        last_day=(6, 24),
+        palette_by_theme={
+            "dark": {"bg": "#0b1a3a", "star": "#3b5dc9", "star_hi": "#ffffff", "accent": "#ffffff"},
+            "light": {"bg": "#cfe3ff", "star": "#ffffff", "star_hi": "#eaf2ff", "accent": "#003da5"},
+        },
+        hat_colours={"y": "pants", "w": "spark"},
+        card_border="pants",
+        decorate=_quebec,
+    ),
     "halloween": Season(
         name="halloween",
         first_day=(10, 15),
