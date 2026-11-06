@@ -249,7 +249,10 @@ class SeasonTests(unittest.TestCase):
             datetime.date(2027, 6, 16): None,
             datetime.date(2027, 6, 17): "quebec",
             datetime.date(2027, 6, 24): "quebec",
-            datetime.date(2027, 6, 25): None,
+            datetime.date(2027, 6, 25): "canada-day",
+            datetime.date(2027, 7, 1): "canada-day",
+            datetime.date(2027, 7, 2): "canada-day",
+            datetime.date(2027, 7, 3): None,
         }
         for day, expected in cases.items():
             season = Z.resolve("auto", today=day)
