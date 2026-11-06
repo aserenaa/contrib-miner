@@ -238,8 +238,10 @@ class SeasonTests(unittest.TestCase):
         cases = {
             datetime.date(2026, 10, 14): None,
             datetime.date(2026, 10, 15): "halloween",
-            datetime.date(2026, 11, 1): "halloween",
-            datetime.date(2026, 11, 2): None,
+            datetime.date(2026, 10, 31): "halloween",
+            datetime.date(2026, 11, 1): "dia-de-muertos",
+            datetime.date(2026, 11, 2): "dia-de-muertos",
+            datetime.date(2026, 11, 3): None,
             datetime.date(2026, 12, 1): "christmas",
             datetime.date(2026, 12, 26): "christmas",
             datetime.date(2026, 12, 27): None,
