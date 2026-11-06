@@ -242,7 +242,11 @@ class SeasonTests(unittest.TestCase):
             datetime.date(2026, 11, 2): None,
             datetime.date(2026, 12, 1): "christmas",
             datetime.date(2026, 12, 26): "christmas",
-            datetime.date(2026, 12, 27): None,
+            datetime.date(2026, 12, 27): "new-year",
+            datetime.date(2026, 12, 31): "new-year",
+            datetime.date(2027, 1, 1): "new-year",
+            datetime.date(2027, 1, 2): "new-year",
+            datetime.date(2027, 1, 3): None,
             datetime.date(2027, 6, 1): None,
         }
         for day, expected in cases.items():

@@ -29,7 +29,10 @@ class Season:
     decorate: Decorate = field(repr=False)
 
     def active_on(self, day: datetime.date) -> bool:
-        return self.first_day <= (day.month, day.day) <= self.last_day
+        today = (day.month, day.day)
+        if self.first_day <= self.last_day:
+            return self.first_day <= today <= self.last_day
+        return today >= self.first_day or today <= self.last_day
 
 
 def _surface_spots(scene: Scene, rng: random.Random, count: int, width: int) -> list[int]:
@@ -105,6 +108,36 @@ def _christmas(c: Canvas, scene: Scene, rng: random.Random) -> None:
         c.blit(TREE, TREE_KEY, x, GRASS_Y - len(TREE))
 
 
+FIREWORK = [
+    "...h...",
+    ".h.c.h.",
+    "..ccc..",
+    "hcc.cch",
+    "..ccc..",
+    ".h.c.h.",
+    "...h...",
+]
+FIREWORK_COLOURS = [
+    ("copper", "copper_hi"),
+    ("diamond", "diamond_hi"),
+    ("shirt", "gold_hi"),
+    ("purple_hi", "spark"),
+    ("grass", "grass_hi"),
+]
+CONFETTI = ["gold", "copper", "diamond_hi", "shirt", "purple_hi"]
+
+
+def _new_year(c: Canvas, scene: Scene, rng: random.Random) -> None:
+    for i, x in enumerate(_surface_spots(scene, rng, 6, len(FIREWORK[0]))):
+        core, tip = FIREWORK_COLOURS[i % len(FIREWORK_COLOURS)]
+        y = 8 + rng.randrange(3)
+        c.blit(FIREWORK, {"c": core, "h": tip}, x, y)
+        c.set(x + 3, y + len(FIREWORK) + 1, S.IDX[tip])
+    for x in range(scene.w):
+        if rng.random() < 0.2:
+            c.set(x, GRASS_Y + rng.randrange(2), S.IDX[rng.choice(CONFETTI)])
+
+
 SEASONS: dict[str, Season] = {
     "halloween": Season(
         name="halloween",
@@ -129,6 +162,18 @@ SEASONS: dict[str, Season] = {
         hat_colours={"y": "shirt", "w": "spark"},
         card_border="shirt",
         decorate=_christmas,
+    ),
+    "new-year": Season(
+        name="new-year",
+        first_day=(12, 27),
+        last_day=(1, 2),
+        palette_by_theme={
+            "dark": {"bg": "#0b0e24", "star": "#566c86", "star_hi": "#ffffff", "accent": "#ffcd75"},
+            "light": {"bg": "#f3d9e6", "star": "#ffffff", "star_hi": "#fbeef4", "accent": "#5d275d"},
+        },
+        hat_colours={"y": "diamond", "w": "gold_hi"},
+        card_border="diamond",
+        decorate=_new_year,
     ),
 }
 
