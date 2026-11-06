@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime
+import itertools
 import random
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -105,7 +106,67 @@ def _christmas(c: Canvas, scene: Scene, rng: random.Random) -> None:
         c.blit(TREE, TREE_KEY, x, GRASS_Y - len(TREE))
 
 
+FLAG = [
+    "k......",
+    "|ggwwrr",
+    "|ggeerr",
+    "|ggwwrr",
+    "|......",
+    "|......",
+    "|......",
+    "|......",
+    "|......",
+]
+FLAG_KEY = {"k": "gold", "|": "stone_light", "g": "grass", "w": "spark", "r": "shirt", "e": "copper"}
+
+PENNANT = [
+    "ccc",
+    "c.c",
+    ".c.",
+]
+PENNANT_COLOURS = ("grass", "spark", "shirt")
+PENNANT_SPACING = 4
+GARLAND_SAG = 3
+
+
+def _garland(c: Canvas, x0: int, x1: int, y: int, first_colour: int) -> int:
+    """A sagging string of papel picado between two poles. Returns the next pennant colour."""
+    span = x1 - x0
+    colour = first_colour
+    for x in range(x0, x1 + 1):
+        t = (x - x0) / span
+        sag = round(GARLAND_SAG * 4 * t * (1 - t))
+        c.set(x, y + sag, S.IDX["stone_light"])
+        if x - x0 >= 2 and x1 - x >= 4 and (x - x0) % PENNANT_SPACING == 2:
+            c.blit(PENNANT, {"c": PENNANT_COLOURS[colour % len(PENNANT_COLOURS)]}, x, y + sag + 1)
+            colour += 1
+    return colour
+
+
+def _independence(c: Canvas, scene: Scene, rng: random.Random) -> None:
+    flag_top = GRASS_Y - len(FLAG)
+    poles = _surface_spots(scene, rng, 7, len(FLAG[0]))
+    colour = 0
+    for left, right in itertools.pairwise(poles):
+        colour = _garland(c, left + len(FLAG[0]), right, flag_top + 1, colour)
+    for x in poles:
+        c.blit(FLAG, FLAG_KEY, x, flag_top)
+
+
 SEASONS: dict[str, Season] = {
+    # Mexican Independence Day: the Grito on the night of September 15, the holiday on the 16th.
+    "independence": Season(
+        name="independence",
+        first_day=(9, 1),
+        last_day=(9, 16),
+        palette_by_theme={
+            "dark": {"bg": "#101b33", "accent": "#38b764"},
+            "light": {"bg": "#fde4c4", "star": "#ffffff", "star_hi": "#fff3e3"},
+        },
+        hat_colours={"y": "grass", "w": "spark"},
+        card_border="grass",
+        decorate=_independence,
+    ),
     "halloween": Season(
         name="halloween",
         first_day=(10, 15),

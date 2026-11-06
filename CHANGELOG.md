@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Another small surprise in September.
+
 ## [1.3.2] - 2026-10-06
 
 ### Fixed
