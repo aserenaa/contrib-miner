@@ -108,7 +108,7 @@ def _christmas(c: Canvas, scene: Scene, rng: random.Random) -> None:
         c.blit(TREE, TREE_KEY, x, GRASS_Y - len(TREE))
 
 
-FIREWORK = [
+BIG_FIREWORK = [
     "...h...",
     ".h.c.h.",
     "..ccc..",
@@ -117,22 +117,70 @@ FIREWORK = [
     ".h.c.h.",
     "...h...",
 ]
+SMALL_FIREWORK = [
+    "h.h.h",
+    ".ccc.",
+    "hc.ch",
+    ".ccc.",
+    "h.h.h",
+]
 FIREWORK_COLOURS = [
     ("copper", "copper_hi"),
     ("diamond", "diamond_hi"),
     ("shirt", "gold_hi"),
     ("purple_hi", "spark"),
     ("grass", "grass_hi"),
+    ("gold", "spark"),
 ]
+FIREWORK_SPACING = 14
 CONFETTI = ["gold", "copper", "diamond_hi", "shirt", "purple_hi"]
+BANNER_TOP = 2
+BANNER_TEXT_SCALE = 2
+
+
+def _coming_year(today: datetime.date | None = None) -> int:
+    """The year being welcomed: next year from July on, this year until then."""
+    today = today or datetime.datetime.now(datetime.timezone.utc).date()
+    return today.year + 1 if today.month >= 7 else today.year
+
+
+def _big_text(c: Canvas, text: str, x: int, y: int, colour: str) -> None:
+    k = BANNER_TEXT_SCALE
+    for i, ch in enumerate(text):
+        for dy, row in enumerate(S.FONT[ch]):
+            for dx, bit in enumerate(row):
+                if bit == "#":
+                    c.rect(x + (i * S.GLYPH_ADVANCE + dx) * k, y + dy * k, k, k, S.IDX[colour])
+
+
+def _banner(c: Canvas, scene: Scene, year: int) -> tuple[int, int]:
+    """A red sign on two posts with the year in big gold digits. Returns its left and right edges."""
+    text = str(year)
+    text_w = S.text_width(text) * BANNER_TEXT_SCALE
+    text_h = S.GLYPH_H * BANNER_TEXT_SCALE
+    w, h = text_w + 6, text_h + 4
+    x0 = (scene.w - w) // 2
+    c.rect(x0, BANNER_TOP, w, h, S.IDX["gold"])
+    c.rect(x0 + 1, BANNER_TOP + 1, w - 2, h - 2, S.IDX["shirt"])
+    _big_text(c, text, x0 + 3, BANNER_TOP + 2, "gold_hi")
+    for post_x in (x0 + 2, x0 + w - 3):
+        c.rect(post_x, BANNER_TOP + h, 1, GRASS_Y - BANNER_TOP - h, S.IDX["dirt_light"])
+    return x0, x0 + w
 
 
 def _new_year(c: Canvas, scene: Scene, rng: random.Random) -> None:
-    for i, x in enumerate(_surface_spots(scene, rng, 6, len(FIREWORK[0]))):
-        core, tip = FIREWORK_COLOURS[i % len(FIREWORK_COLOURS)]
-        y = 8 + rng.randrange(3)
-        c.blit(FIREWORK, {"c": core, "h": tip}, x, y)
-        c.set(x + 3, y + len(FIREWORK) + 1, S.IDX[tip])
+    left, right = _banner(c, scene, _coming_year())
+    scene.stars = [star for star in scene.stars if not left <= star[0] < right]
+    x, i = SKY_DECORATION_MIN_X, 0
+    while x < scene.w - len(BIG_FIREWORK[0]) - 4:
+        if x + len(BIG_FIREWORK[0]) + 2 < left or x > right + 2:
+            big = i % 2 == 0
+            sprite = BIG_FIREWORK if big else SMALL_FIREWORK
+            core, tip = FIREWORK_COLOURS[i % len(FIREWORK_COLOURS)]
+            y = (8 if big else 9) + rng.randrange(2 if big else 3)
+            c.blit(sprite, {"c": core, "h": tip}, x + rng.randrange(3), y)
+            i += 1
+        x += FIREWORK_SPACING
     for x in range(scene.w):
         if rng.random() < 0.2:
             c.set(x, GRASS_Y + rng.randrange(2), S.IDX[rng.choice(CONFETTI)])

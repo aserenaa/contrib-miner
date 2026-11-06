@@ -253,6 +253,10 @@ class SeasonTests(unittest.TestCase):
             season = Z.resolve("auto", today=day)
             self.assertEqual(season.name if season else None, expected, day)
 
+    def test_new_year_banner_welcomes_the_coming_year(self):
+        self.assertEqual(Z._coming_year(datetime.date(2026, 12, 27)), 2027)
+        self.assertEqual(Z._coming_year(datetime.date(2027, 1, 2)), 2027)
+
     def test_explicit_and_unknown_choices(self):
         self.assertIsNone(Z.resolve("none"))
         self.assertEqual(Z.resolve("christmas").name, "christmas")
