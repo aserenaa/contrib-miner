@@ -20,7 +20,7 @@ walks to every day you contributed and mines it out. The busier the day, the ric
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: light)" srcset="docs/sample-light.gif">
-    <img src="docs/sample.gif" alt="An 8-bit miner climbing down into a contribution graph, walking through tunnels and striking coal, copper, gold and diamond ore from the side while a contribution counter climbs" width="864">
+    <img src="docs/sample.gif" alt="An 8-bit miner climbing down into a contribution graph under an autumn sky with orange trees and falling leaves, walking through tunnels and striking coal, copper, gold and diamond ore from the side while a contribution counter climbs" width="864">
   </picture>
 </p>
 
