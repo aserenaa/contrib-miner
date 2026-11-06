@@ -6,9 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-11-05
+
 ### Added
 
-- The sky and surface follow the season: snowy pines and a snowman in winter, blossoms in spring, a beach in summer and falling leaves in autumn.
+- The sky and surface follow the season: snowy pines and a snowman in winter, blossoms in spring, a
+  beach in summer and falling leaves in autumn. The `sky` input and `--sky` flag pick a season or
+  turn it off; `auto`, the default, follows the date.
 - Another small surprise in September.
 - Another small surprise, in June.
 - Another small surprise, just after the first one.
@@ -69,7 +73,8 @@ First public release.
 - `contrib-miner` command line tool with `--sample` and `--from-json` for offline previews.
 - Delta-encoded frames that keep a full year at about 100 KB at the default 2x scale.
 
-[Unreleased]: https://github.com/aserenaa/contrib-miner/compare/v1.3.2...HEAD
+[Unreleased]: https://github.com/aserenaa/contrib-miner/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/aserenaa/contrib-miner/compare/v1.3.2...v1.4.0
 [1.3.2]: https://github.com/aserenaa/contrib-miner/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/aserenaa/contrib-miner/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/aserenaa/contrib-miner/compare/v1.2.0...v1.3.0
