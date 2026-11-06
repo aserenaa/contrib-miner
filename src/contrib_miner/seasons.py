@@ -106,7 +106,7 @@ def _christmas(c: Canvas, scene: Scene, rng: random.Random) -> None:
         c.blit(TREE, TREE_KEY, x, GRASS_Y - len(TREE))
 
 
-FLAG = [
+MEXICAN_FLAG = [
     "k......",
     "|ggwwrr",
     "|ggeerr",
@@ -117,7 +117,7 @@ FLAG = [
     "|......",
     "|......",
 ]
-FLAG_KEY = {"k": "gold", "|": "stone_light", "g": "grass", "w": "spark", "r": "shirt", "e": "copper"}
+MEXICAN_FLAG_KEY = {"k": "gold", "|": "stone_light", "g": "grass", "w": "spark", "r": "shirt", "e": "copper"}
 
 PENNANT = [
     "ccc",
@@ -144,13 +144,46 @@ def _garland(c: Canvas, x0: int, x1: int, y: int, first_colour: int) -> int:
 
 
 def _independence(c: Canvas, scene: Scene, rng: random.Random) -> None:
-    flag_top = GRASS_Y - len(FLAG)
-    poles = _surface_spots(scene, rng, 7, len(FLAG[0]))
+    flag_top = GRASS_Y - len(MEXICAN_FLAG)
+    poles = _surface_spots(scene, rng, 7, len(MEXICAN_FLAG[0]))
     colour = 0
     for left, right in itertools.pairwise(poles):
-        colour = _garland(c, left + len(FLAG[0]), right, flag_top + 1, colour)
+        colour = _garland(c, left + len(MEXICAN_FLAG[0]), right, flag_top + 1, colour)
     for x in poles:
-        c.blit(FLAG, FLAG_KEY, x, flag_top)
+        c.blit(MEXICAN_FLAG, MEXICAN_FLAG_KEY, x, flag_top)
+
+
+FLAG = [
+    "prrrwwwrwwwrrr",
+    "prrrwrwrwrwrrr",
+    "prrrwrrrrrwrrr",
+    "prrrwwrrrwwrrr",
+    "prrrwwwrwwwrrr",
+    "p.............",
+    "p.............",
+    "p.............",
+    "p.............",
+]
+FLAG_KEY = {"p": "stone_light", "r": "shirt", "w": "spark"}
+
+FIREWORK = [
+    "...x...",
+    ".x...x.",
+    "...h...",
+    "x.hHh.x",
+    "...h...",
+    ".x...x.",
+    "...x...",
+]
+
+
+def _canada_day(c: Canvas, scene: Scene, rng: random.Random) -> None:
+    mx = scene.w * 3 // 5
+    second = "spark" if scene.theme == "dark" else "gold"
+    for dx, dy, colour in ((-34, 2, "shirt"), (0, 6, second), (30, 1, "shirt"), (58, 7, second)):
+        c.blit(FIREWORK, {"x": colour, "h": colour, "H": "gold_hi"}, mx + dx, dy)
+    for x in _surface_spots(scene, rng, 6, len(FLAG[0])):
+        c.blit(FLAG, FLAG_KEY, x, GRASS_Y - len(FLAG))
 
 
 PAPEL_PICADO = [
@@ -248,6 +281,18 @@ SEASONS: dict[str, Season] = {
         hat_colours={"y": "shirt", "w": "spark"},
         card_border="shirt",
         decorate=_christmas,
+    ),
+    "canada-day": Season(
+        name="canada-day",
+        first_day=(6, 25),
+        last_day=(7, 2),
+        palette_by_theme={
+            "dark": {"bg": "#0e1630", "star": "#3b4a6b", "star_hi": "#94b0c2", "accent": "#ef5b5b"},
+            "light": {"bg": "#bfe6fb", "star": "#ffffff", "star_hi": "#e3f4fd", "accent": "#b13e53"},
+        },
+        hat_colours={"y": "shirt", "w": "spark"},
+        card_border="shirt",
+        decorate=_canada_day,
     ),
 }
 
