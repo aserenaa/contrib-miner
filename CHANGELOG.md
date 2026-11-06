@@ -9,6 +9,7 @@ All notable changes to this project are documented here. The format follows
 ### Added
 
 - Another small surprise, in June.
+- Another small surprise, just after the first one.
 
 ## [1.3.2] - 2026-10-06
 
